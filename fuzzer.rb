@@ -17,16 +17,19 @@ opts = Slop.parse do |o|
 	end
 end
 
-def fuzzer(url, params, file, *cookie)
-
+## Begin the fuzzing
+def fuzzer(url, file, params, request, *cookie)
+	params.each do |x, y| 
+		puts  "#{x} = #{y}"
+	end
 end
 
-## Intilize variables
+## Initialize variables
 uri = ""
 request = ""
 params = []
 
-## Set request type
+## Set request type & parse params
 if opts[:get] == true
 	request = "get" 
 	uri = URI(opts[:url])
@@ -36,8 +39,4 @@ elsif opts[:post] == true
 	params = CGI::parse(opts[:data])
 end
 
-params.each do |x, y| 
-	puts  "#{x} = #{y}"
-end
-
-fuzzer(opts[:url], opts[:file], opts[:cookie])
+fuzzer(opts[:url], opts[:file], params, request, opts[:cookie])
