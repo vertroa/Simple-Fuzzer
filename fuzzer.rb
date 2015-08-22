@@ -18,16 +18,27 @@ opts = Slop.parse do |o|
 end
 
 ## Begin the fuzzing
-def fuzzer(url, file, params, request, *cookie)
+def fuzzer(url, file, params, request, *cookie) 
 	params.each do |x, y| 
 		puts  "#{x} = #{y}"
 	end
+
+
+	
 end
 
 ## Initialize variables
 uri = ""
 request = ""
 params = []
+payloads = []
+
+begin
+    payloads_file = File.open(opts[:payloads],"r")
+rescue
+    p "No file found matching #{opts[:payloads]}"
+    exit
+end
 
 ## Set request type & parse params
 if opts[:get] == true
@@ -39,4 +50,9 @@ elsif opts[:post] == true
 	params = CGI::parse(opts[:data])
 end
 
-fuzzer(opts[:url], opts[:file], params, request, opts[:cookie])
+## Import payloads from file
+payloads_file.each do |payload|
+	payloads.push(payload)
+end 
+
+fuzzer(opts[:url], payloads, params, request, opts[:cookie])
