@@ -20,19 +20,48 @@ end
 
 ## Method that places the fuzzing requests 
 def fuzzer(url, payloads, params, request, uri, *cookie) 
+	## Configures the connection settings
+	conn_options = Hash.new
+		conn_options[:proxy] = 'http://127.0.0.1:8080'
+
+	## Creates a new HTTP connection
+	conn = Faraday.new(uri, conn_options)
+
+	if request == "GET"
+		fuzzer_get(conn, payloads, params, uri, *cookie)
+	elsif request == "POST"
+		fuzzer_post(conn, payloads, params, uri, *cookie)
+	end
+
+end
+
+def fuzzer_get(conn, payloads, params, uri, *cookie)
+	get_params = ""
+
+	conn.get do |req|
+		params.each do |param, value|
+			get_params.concat("?#{param}=TEST&")
+		end
+
+		payloads.each do |payload|
+			payload.strip!
+			get = get_params 
+			get = get.gsub "TEST", "#{payload}"
+			get = get[0...-1]
+
+			req.url uri.path + get
+			req.headers['Cookie'] = cookie
+		end
+	end
+end
+
+def fuzzer_post(conn, payloads, params, uri, *cookie)
 	post_data = ""
 
 	## Generates the post data
 	params.each do |param, value|
 		post_data.concat("#{param}=TEST&")
 	end
-
-	## Configures the connection settings
-	conn_options = Hash.new
-		conn_options[:proxy] = 'http://127.0.0.1:8080'
-
-	## Creates a new HTTP connection
-	conn = Faraday.new(url, conn_options)
 
 	payloads.each do |payload|
 
@@ -67,11 +96,11 @@ end
 
 ## Set request type & parse params
 if opts[:get] == true
-	request = "get" 
+	request = "GET" 
 	uri = URI(opts[:url])
 	params = CGI::parse(uri.query)
 elsif opts[:post] == true
-	request = "post" 
+	request = "POST" 
 	uri = URI(opts[:url])
 	params = CGI::parse(opts[:data])
 end
